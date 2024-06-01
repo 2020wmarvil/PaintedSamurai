@@ -37,9 +37,24 @@ struct FrameData {
 	DeletionQueue _deletionQueue;
 };
 
+struct ComputePushConstants {
+	glm::vec4 data1;
+	glm::vec4 data2;
+	glm::vec4 data3;
+	glm::vec4 data4;
+};
+
+struct ComputeEffect {
+    const char* name;
+
+	VkPipeline pipeline;
+	VkPipelineLayout layout;
+
+	ComputePushConstants data;
+};
+
 class VulkanEngine {
 public:
-
 	bool _isInitialized{ false };
 	int _frameNumber {0};
 	bool stop_rendering{ false };
@@ -95,6 +110,15 @@ public:
 	VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
 
+	// immediate submit structures
+	VkFence _immFence;
+	VkCommandBuffer _immCommandBuffer;
+    VkCommandPool _immCommandPool;
+
+	// compute shader pipelines to select in imgui
+	std::vector<ComputeEffect> backgroundEffects;
+	int currentBackgroundEffect{0};
+
 private:
 	void init_vulkan();
 	void init_swapchain();
@@ -103,9 +127,13 @@ private:
 	void init_descriptors();
 	void init_pipelines();
 	void init_background_pipelines();
+	void init_imgui();
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
 
 	void draw_background(VkCommandBuffer cmd);
+	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
+
+	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
 };
